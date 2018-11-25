@@ -8,16 +8,51 @@ import {
   Button,
   TouchableOpacity,
   View,
+  Alert,
 } from 'react-native';
 import { WebBrowser } from 'expo';
+import axios from 'axios';
 
 import { MonoText } from '../components/StyledText';
+
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
     header: null,
   };
 
+  constructor(props){
+    super(props);
+    this.state = {
+      latitude: "",
+      longitude: ""
+    }
+  }
+  
+  
+  handleAlertPress = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.setState({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          error: null,
+        });
+        axios.post("http://10.10.150.51:3000/reportes/nuevo", {
+            latitud: position.coords.latitude,
+            longuitud: position.coords.longitude
+        })
+        .then(resp => {
+          console.log(resp)
+        })
+        .catch(error => {
+          console.log(error)
+        })
+      },
+      (error) => this.setState({ error: error.message }),
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+    );
+  };
   render() {
     return (
       <View style={styles.container}>
@@ -41,36 +76,40 @@ export default class HomeScreen extends React.Component {
             
 
             <Text style={styles.getStartedText}>
-              Aplicación con fines de ayudar con la seguridad en el estado de colima.
+              Aplicación con fines de ayudar con la seguridad en el estado de Colima.
             </Text>
           </View>
           <View>
           <Button
- 
-            title="Learn More"
+            
+            onPress={() => {
+         
+      this.handleAlertPress()
+            }}
+            title="Alerta"
             color="#841584"
             accessibilityLabel="Learn more about this purple button"
               />
+          </View>
+
+          <View> 
+            <Text>
+            {
+              `Latitud: ${this.state.latitude} Longitud: ${this.state.longitude}`
+            }
+            </Text>
           </View>
         </ScrollView>
 
        
       </View>
     );
+  
   }
 
- 
-
-  _handleLearnMorePress = () => {
-    WebBrowser.openBrowserAsync('https://docs.expo.io/versions/latest/guides/development-mode');
-  };
-
-  _handleHelpPress = () => {
-    WebBrowser.openBrowserAsync(
-      'https://docs.expo.io/versions/latest/guides/up-and-running.html#can-t-see-your-changes'
-    );
-  };
 }
+
+  
 
 const styles = StyleSheet.create({
   container: {
